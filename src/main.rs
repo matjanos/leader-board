@@ -80,8 +80,8 @@ async fn main() -> Result<(), reqwest::Error> {
 
     let now = Utc::now();
             match  fetch_user_workouts(&client, cookie_value, now).await {
-                Ok(user_workouts) => {
-                    for workout in user_workouts.userWorkouts.iter() {
+                Ok(response) => {
+                    for workout in response.user_workouts.iter() {
                         if workout.classes.start_time == 405 {
                             println!("{:?} ({}) - {:#?}", workout.user.first_name, workout.user.id, workout.user.image);
                         }

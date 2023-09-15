@@ -19,7 +19,8 @@ pub struct UserWorkout {
 
 #[derive(Debug, Deserialize)]
 pub struct UsersWorkoutsApiResponse {
-    pub userWorkouts: Vec<UserWorkout>,
+    #[serde(rename = "userWorkouts")]
+    pub user_workouts: Vec<UserWorkout>,
 }
 
 #[derive(Debug, Deserialize)]
