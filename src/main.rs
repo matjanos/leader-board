@@ -7,7 +7,7 @@ use reqwest::redirect::Policy;
 use models::UsersWorkoutsApiResponse;
 use serde_json::json;
 
-async fn fetch_session_auth_cookie(client: &reqwest::Client) -> Result<String, String> {
+async fn fetch_session_auth_cookie(client: &reqwest::Client, host : &String) -> Result<String, String> {
     let username = env::var("CROSSFIT_USERNAME").expect("CROSSFIT_USERNAME not set");
     let password = env::var("CROSSFIT_PASSWORD").expect("CROSSFIT_PASSWORD not set");
 
@@ -20,7 +20,7 @@ async fn fetch_session_auth_cookie(client: &reqwest::Client) -> Result<String, S
 
     // Make the POST request to login
     let res = client
-        .post("https://torun.wod.guru/user/login")
+        .post(format!("{}/user/login", host))
         .form(&params)
         .send()
         .await
@@ -42,6 +42,7 @@ async fn fetch_session_auth_cookie(client: &reqwest::Client) -> Result<String, S
 
 async fn fetch_user_workouts(
     client: &reqwest::Client,
+    host: &String,
     auth_cookie: String,
     time: DateTime<Utc>,
 ) -> Result<UsersWorkoutsApiResponse, String> {
@@ -52,7 +53,7 @@ async fn fetch_user_workouts(
     });
 
     let res = client
-        .post("https://torun.wod.guru/my-training/user-workout/fetch-daily")
+        .post(format!("{}/my-training/user-workout/fetch-daily", host))
         .header("Cookie", format!("PHPSESSID={}", auth_cookie))
         .header("Content-Type", "application/json".to_string())
         .json(&json_data)
@@ -69,20 +70,24 @@ async fn fetch_user_workouts(
 }
 
 #[tokio::main]
-async fn main() -> Result<(), reqwest::Error> {
+async fn main() -> Result<(), reqwest::Error> { 
+    let host  = env::var("CROSSFIT_HOST").expect("CROSSFIT_HOST not set");
+
     let client = reqwest::Client::builder()
         .redirect(Policy::none())
         .build()
         .unwrap();
 
-    match fetch_session_auth_cookie(&client).await {
+    match fetch_session_auth_cookie(&client, &host).await {
         Ok(cookie_value) => {
 
     let now = Utc::now();
-            match  fetch_user_workouts(&client, cookie_value, now).await {
+            match  fetch_user_workouts(&client, &host, cookie_value, now).await {
                 Ok(response) => {
                     for workout in response.user_workouts.iter() {
                         if workout.classes.start_time == 405 {
+
+                            //TODO: publish in EventHub
                             println!("{:?} ({}) - {:#?}", workout.user.first_name, workout.user.id, workout.user.image);
                         }
                     }
