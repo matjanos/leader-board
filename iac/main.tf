@@ -91,7 +91,7 @@ resource "azurerm_container_group" "container_group" {
 
   container {
     name   = "container-${var.app_name}-${var.environment}-${var.location}-001"
-    image  = "mcr.microsoft.com/k8se/quickstart-jobs:latest"
+    image  = "acrleaderboarddevpolandcentral001.azurecr.io/isidore-leader-board:${var.environment}"
     cpu    = "0.5"
     memory = "0.5"
 
